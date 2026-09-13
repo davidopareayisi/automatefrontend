@@ -277,11 +277,11 @@ export default function LoginPage() {
       </div>
 
       {/* Bottom info */}
-      <div className="text-[11px] font-mono text-[#455269] flex items-center gap-4">
+      <div className="text-[10px] sm:text-[11px] font-mono text-[#455269] flex flex-wrap items-center justify-center gap-2 sm:gap-4 mt-8 text-center px-4">
         <span>Opada Runtime v1.0.4</span>
-        <span>•</span>
+        <span className="hidden sm:inline">•</span>
         <span>PostgreSQL 16 Engine</span>
-        <span>•</span>
+        <span className="hidden sm:inline">•</span>
         <a href="http://localhost:8080/health" target="_blank" rel="noreferrer" className="hover:text-[#8e9bb0] transition-colors">
           Health Check
         </a>

@@ -23,6 +23,8 @@ import {
   Sparkles,
   Cpu,
   Activity,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { api, Conversation, Message, StepEvent, User } from "@/lib/api";
 
@@ -72,6 +74,13 @@ function FormattedOutput({ text }: { text: string }) {
             }
             return <strong className="font-semibold text-white" {...props} />;
           },
+          table(props: any) {
+            return (
+              <div className="overflow-x-auto w-full max-w-full mb-4">
+                <table className="w-full text-left border-collapse" {...props} />
+              </div>
+            );
+          },
         }}
       >
         {text}
@@ -115,6 +124,59 @@ function CodeSnippetBlock({ lang, code }: { lang: string; code: string }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN CHAT PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
+function ExpandableMessage({ content, isUser, msgId }: { content: string, isUser: boolean, msgId: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      // Check if content height exceeds the max-height (e.g., 250px)
+      if (contentRef.current.scrollHeight > 250) {
+        setIsOverflowing(true);
+      }
+    }
+  }, [content]);
+
+  return (
+    <div className="relative">
+      <div
+        ref={contentRef}
+        className={`transition-all duration-300 ease-in-out ${
+          !expanded && isOverflowing ? "max-h-[250px] overflow-hidden" : ""
+        }`}
+      >
+        {isUser ? (
+          <div className="p-3 rounded-lg bg-[#0e1320] border border-[#1c263c] text-white text-xs leading-relaxed font-mono whitespace-pre-wrap">
+            {content}
+          </div>
+        ) : (
+          <div className="p-3.5 rounded-lg bg-[#0b0e17] border border-[#1c2336] text-[#e2e8f0] shadow-sm">
+            <FormattedOutput text={content} />
+          </div>
+        )}
+      </div>
+
+      {!expanded && isOverflowing && (
+        <div 
+          className={`absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t pointer-events-none rounded-b-lg ${
+            isUser ? "from-[#0e1320] to-transparent" : "from-[#0b0e17] to-transparent"
+          }`} 
+        />
+      )}
+
+      {isOverflowing && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-2 text-[11px] font-mono font-medium text-[#7888a2] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ChatPage() {
   const router = useRouter();
 
@@ -150,6 +212,11 @@ export default function ChatPage() {
 
     loadConversations();
     checkBackendHealth();
+
+    // Close sidebar on mobile by default
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   }, [router]);
 
   // Auto scroll to bottom
@@ -396,10 +463,20 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen w-screen bg-[#08090d] text-[#e2e8f0] overflow-hidden font-sans selection:bg-white/20 selection:text-white">
       {/* ── LEFT SIDEBAR ── */}
+      {/* Mobile Backdrop overlay */}
+      {sidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       <aside
         className={`${
-          sidebarOpen ? "w-64" : "w-0 -translate-x-full"
-        } transition-all duration-200 ease-in-out shrink-0 bg-[#090b12] border-r border-[#161a26] flex flex-col justify-between z-30 relative overflow-hidden`}
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed md:relative md:translate-x-0 w-64 ${
+          !sidebarOpen ? "md:w-0 md:border-r-0" : "md:w-64"
+        } transition-all duration-300 ease-in-out shrink-0 h-full bg-[#090b12] border-r border-[#161a26] flex flex-col justify-between z-50 overflow-hidden`}
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Top Brand Bar */}
@@ -529,13 +606,13 @@ export default function ChatPage() {
               </button>
             )}
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-semibold text-white">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <span className="text-xs font-mono font-semibold text-white truncate max-w-[70px] min-[400px]:max-w-[120px] sm:max-w-xs">
                 {conversations.find((c) => c.id === activeConvId)?.title ||
                   "Active Workspace"}
               </span>
-              <span className="text-[#3b455b]">•</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#1b2336] bg-[#0c101a] text-[#8e9bb0]">
+              <span className="text-[#3b455b] hidden sm:inline">•</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#1b2336] bg-[#0c101a] text-[#8e9bb0] hidden sm:inline-block">
                 PostgreSQL SKIP LOCKED
               </span>
             </div>
@@ -544,11 +621,11 @@ export default function ChatPage() {
           {/* Model Switcher & Overview Link */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-1.5 bg-[#0c101a] border border-[#1b2336] rounded-md px-2.5 py-1 text-xs font-mono">
-              <span className="text-[#54647c] text-[11px]">Model:</span>
+              <span className="text-[#54647c] text-[11px] hidden sm:inline">Model:</span>
               <select
                 value={selectedProvider}
                 onChange={(e) => setSelectedProvider(e.target.value)}
-                className="bg-transparent text-[#c0ccdf] font-medium focus:outline-none cursor-pointer text-xs"
+                className="bg-transparent text-[#c0ccdf] font-medium focus:outline-none cursor-pointer text-xs w-[75px] sm:w-auto text-ellipsis"
               >
                 <option value="groq" className="bg-[#0c101a] text-white">
                   Groq LPU (~180ms)
@@ -567,7 +644,7 @@ export default function ChatPage() {
 
             <Link
               href="/"
-              className="text-xs font-mono text-[#7888a2] hover:text-white px-2.5 py-1 rounded border border-[#1b2336] hover:bg-[#0e1320] transition-colors"
+              className="hidden min-[400px]:block text-xs font-mono text-[#7888a2] hover:text-white px-2.5 py-1 rounded border border-[#1b2336] hover:bg-[#0e1320] transition-colors"
             >
               Overview
             </Link>
@@ -632,43 +709,58 @@ export default function ChatPage() {
                 </div>
 
                 {/* Message Body */}
-                <div className="flex flex-col space-y-1.5 max-w-[85%]">
-                  {/* USER MESSAGE */}
-                  {msg.role === "user" ? (
-                    <div className="p-3 rounded-lg bg-[#0e1320] border border-[#1c263c] text-white text-xs leading-relaxed font-mono whitespace-pre-wrap">
-                      {msg.content}
-                    </div>
-                  ) : (
-                    /* DIRECT AI OUTCOME AS RECEIVED FROM BACKEND */
-                    <div className="p-3.5 rounded-lg bg-[#0b0e17] border border-[#1c2336] text-[#e2e8f0] shadow-sm">
-                      <FormattedOutput text={msg.content} />
-                    </div>
-                  )}
+                <div className="flex flex-col space-y-1.5 flex-1 min-w-0 sm:flex-none sm:max-w-[85%]">
+                  {/* MESSAGE BODY (Auto-collapsing if long) */}
+                  <ExpandableMessage
+                    content={msg.content}
+                    isUser={msg.role === "user"}
+                    msgId={msg.id}
+                  />
 
                   {/* Message Meta */}
                   <div
-                    className={`flex items-center gap-2 text-[10px] font-mono text-[#54647c] ${
+                    className={`flex items-center gap-4 text-[10px] font-mono text-[#54647c] ${
                       msg.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <span>
-                      {new Date(msg.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                    {msg.model_provider && <span>• {msg.model_provider}</span>}
-                    <button
-                      onClick={() => copyText(msg.content, msg.id)}
-                      className="hover:text-white p-0.5 rounded transition-colors cursor-pointer"
-                      title="Copy response"
-                    >
-                      {copiedId === msg.id ? (
-                        <Check className="w-3 h-3 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {new Date(msg.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {msg.model_provider && <span>• {msg.model_provider}</span>}
+                    </div>
+
+                    {msg.role === "assistant" && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <button
+                          onClick={() => copyText(msg.content, msg.id)}
+                          className="flex items-center gap-1.5 text-[#64748d] hover:text-[#c0ccdf] hover:bg-[#1c263c] px-1.5 py-1 rounded transition-colors cursor-pointer"
+                          title="Copy response"
+                        >
+                          {copiedId === msg.id ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                          <span className="font-semibold hidden sm:inline-block">Copy</span>
+                        </button>
+                        
+                        <button className="text-[#64748d] hover:text-[#c0ccdf] hover:bg-[#1c263c] p-1 rounded transition-colors cursor-pointer" title="Good response">
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                        </button>
+                        
+                        <button className="text-[#64748d] hover:text-[#c0ccdf] hover:bg-[#1c263c] p-1 rounded transition-colors cursor-pointer" title="Bad response">
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button className="text-[#64748d] hover:text-[#c0ccdf] hover:bg-[#1c263c] p-1 rounded transition-colors cursor-pointer ml-1" title="Regenerate">
+                          <RefreshCw className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -709,7 +801,7 @@ export default function ChatPage() {
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="Message Opada... (e.g. calculate variance in Python jail, check telemetry, run query)"
-                className="w-full max-h-36 bg-transparent text-xs text-[#e2e8f0] placeholder-[#54647c] focus:outline-none resize-none px-2 py-1 font-mono"
+                className="flex-1 min-w-0 max-h-36 bg-transparent text-xs text-[#e2e8f0] placeholder-[#54647c] focus:outline-none resize-none px-2 py-1 font-mono"
               />
 
               <button
@@ -722,10 +814,10 @@ export default function ChatPage() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-mono text-[#54647c] px-1">
-              <span>Enter to send • Shift+Enter for newline</span>
-              <span className="flex items-center gap-1 text-[#64748d]">
-                <Shield className="w-3 h-3 text-emerald-400" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 text-[10px] sm:text-[11px] font-mono text-[#54647c] px-1">
+              <span className="truncate">Enter to send • Shift+Enter for newline</span>
+              <span className="flex items-center gap-1 text-[#64748d] shrink-0">
+                <Shield className="w-3 h-3 text-emerald-400 shrink-0" />
                 Rust Axum sandbox jail active
               </span>
             </div>
