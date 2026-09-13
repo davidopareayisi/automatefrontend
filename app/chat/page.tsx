@@ -712,7 +712,7 @@ export default function ChatPage() {
       {/* ── MAIN WORKSPACE ── */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#08090d] relative">
         {/* Top Header */}
-        <header className="h-14 border-b border-[#161a26] bg-[#08090d]/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0">
+        <header className="h-14 border-b border-[#161a26] bg-[#08090d]/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 sticky top-0 z-30">
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             {!sidebarOpen && (
               <button
@@ -991,13 +991,7 @@ export default function ChatPage() {
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 text-[10px] sm:text-[11px] font-mono text-[#54647c] px-1">
-              <span className="truncate">Enter to send • Shift+Enter for newline</span>
-              <span className="flex items-center gap-1 text-[#64748d] shrink-0">
-                <Shield className="w-3 h-3 text-emerald-400 shrink-0" />
-                Rust Axum sandbox jail active
-              </span>
-            </div>
+
           </form>
         </div>
       </main>
