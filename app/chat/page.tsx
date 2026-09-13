@@ -25,6 +25,7 @@ import {
   Activity,
   ThumbsUp,
   ThumbsDown,
+  Edit2,
 } from "lucide-react";
 import { api, Conversation, Message, StepEvent, User } from "@/lib/api";
 
@@ -187,6 +188,8 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [editingConvId, setEditingConvId] = useState<string | null>(null);
+  const [editTitleText, setEditTitleText] = useState("");
 
   // Composer & Execution State
   const [inputPrompt, setInputPrompt] = useState("");
@@ -332,7 +335,7 @@ export default function ChatPage() {
   const handleNewChat = async () => {
     try {
       const newConv = await api.createConversation(
-        "New Session",
+        "New Conversation",
         selectedProvider,
       );
       setConversations((prev) => [newConv, ...prev]);
@@ -342,7 +345,7 @@ export default function ChatPage() {
       const localConv: Conversation = {
         id: `conv-${Date.now()}`,
         user_id: currentUser?.id || "demo",
-        title: "New Session",
+        title: "New Conversation",
         model_provider: selectedProvider,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -372,6 +375,23 @@ export default function ChatPage() {
       } else {
         handleNewChat();
       }
+    }
+  };
+
+  const handleSaveTitle = async (convId: string, newTitle: string) => {
+    if (!newTitle.trim()) {
+      setEditingConvId(null);
+      return;
+    }
+    
+    // Optimistic update
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, title: newTitle.trim() } : c));
+    setEditingConvId(null);
+    
+    try {
+      await api.updateConversation(convId, newTitle.trim());
+    } catch {
+      // Revert on fail if needed
     }
   };
 
@@ -530,29 +550,64 @@ export default function ChatPage() {
             {conversations.map((conv) => (
               <div
                 key={conv.id}
-                onClick={() => selectConversation(conv.id)}
+                onClick={() => {
+                  if (editingConvId !== conv.id) selectConversation(conv.id);
+                }}
                 className={`group flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                   activeConvId === conv.id
                     ? "bg-[#111726] border border-[#212c42] text-white"
                     : "text-[#7888a2] hover:text-[#c0ccdf] hover:bg-[#0d121e] border border-transparent"
                 }`}
               >
-                <div className="flex items-center gap-2 truncate">
+                <div className="flex items-center gap-2 truncate flex-1 min-w-0">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${activeConvId === conv.id ? "bg-emerald-400" : "bg-[#273248]"}`}
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeConvId === conv.id ? "bg-emerald-400" : "bg-[#273248]"}`}
                   />
-                  <span className="truncate font-mono text-xs">
-                    {conv.title}
-                  </span>
+                  {editingConvId === conv.id ? (
+                    <input
+                      type="text"
+                      autoFocus
+                      value={editTitleText}
+                      onChange={(e) => setEditTitleText(e.target.value)}
+                      onBlur={() => handleSaveTitle(conv.id, editTitleText)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveTitle(conv.id, editTitleText);
+                        if (e.key === "Escape") setEditingConvId(null);
+                      }}
+                      className="bg-[#0b0e17] border border-[#1b2336] text-white rounded px-1.5 py-0.5 outline-none font-mono text-xs w-full mr-2"
+                    />
+                  ) : (
+                    <span className="truncate font-mono text-xs" onDoubleClick={() => {
+                      setEditingConvId(conv.id);
+                      setEditTitleText(conv.title);
+                    }}>
+                      {conv.title}
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  onClick={(e) => handleDeleteConversation(conv.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-[#54647c] rounded transition-opacity"
-                  title="Delete session"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
+                {editingConvId !== conv.id && (
+                  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingConvId(conv.id);
+                        setEditTitleText(conv.title);
+                      }}
+                      className="p-1 hover:text-[#c0ccdf] text-[#54647c] rounded"
+                      title="Rename session"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteConversation(conv.id, e)}
+                      className="p-1 hover:text-red-400 text-[#54647c] rounded"
+                      title="Delete session"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

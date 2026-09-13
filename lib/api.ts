@@ -222,6 +222,16 @@ class ApiClient {
     );
   }
 
+  async updateConversation(
+    id: string,
+    title: string,
+  ): Promise<{ id: string; title: string }> {
+    return this.request<{ id: string; title: string }>(`/conversations/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ title }),
+    });
+  }
+
   async deleteConversation(id: string): Promise<{ status: string }> {
     return this.request<{ status: string }>(`/conversations/${id}`, {
       method: "DELETE",
