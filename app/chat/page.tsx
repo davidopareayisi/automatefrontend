@@ -544,7 +544,7 @@ export default function ChatPage() {
   ];
 
   return (
-    <div className="flex h-[100dvh] w-screen bg-[#08090d] text-[#e2e8f0] overflow-hidden font-sans selection:bg-white/20 selection:text-white">
+    <div className="flex h-[100dvh] w-screen bg-[#08090d] text-[#e2e8f0] overflow-hidden font-sans selection:bg-white/20 selection:text-white" style={{ height: '100dvh' }}>
       {/* ── LEFT SIDEBAR ── */}
       {/* Mobile Backdrop overlay */}
       {sidebarOpen && (
@@ -710,9 +710,9 @@ export default function ChatPage() {
       </aside>
 
       {/* ── MAIN WORKSPACE ── */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#08090d] relative">
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#08090d] relative">
         {/* Top Header */}
-        <header className="h-14 border-b border-[#161a26] bg-[#08090d]/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 sticky top-0 z-30">
+        <header className="h-14 min-h-[3.5rem] border-b border-[#161a26] bg-[#08090d] px-3 sm:px-4 flex items-center justify-between shrink-0 z-30">
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             {!sidebarOpen && (
               <button
@@ -738,12 +738,12 @@ export default function ChatPage() {
 
           {/* Model Switcher & Overview Link */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5 bg-[#0c101a] border border-[#1b2336] rounded-md px-2.5 py-1 text-xs font-mono">
+            <div className="flex items-center gap-1.5 bg-[#0c101a] border border-[#1b2336] rounded-md px-1.5 sm:px-2.5 py-1 text-[10px] sm:text-xs font-mono">
               <span className="text-[#54647c] text-[11px] hidden sm:inline">Model:</span>
               <select
                 value={selectedProvider}
                 onChange={(e) => setSelectedProvider(e.target.value)}
-                className="bg-transparent text-[#c0ccdf] font-medium focus:outline-none cursor-pointer text-xs w-[75px] sm:w-auto text-ellipsis"
+                className="bg-transparent text-[#c0ccdf] font-medium focus:outline-none cursor-pointer text-[10px] sm:text-xs w-[60px] sm:w-auto text-ellipsis"
               >
                 <option value="groq" className="bg-[#0c101a] text-white">
                   Groq LPU (~180ms)
@@ -770,7 +770,7 @@ export default function ChatPage() {
         </header>
 
         {/* Message Feed */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 min-h-0">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center max-w-xl mx-auto text-center px-4 py-8">
               <div className="w-10 h-10 rounded-lg bg-[#0e121d] border border-[#1c2438] flex items-center justify-center text-[#a5b4cb] mb-4">
@@ -807,7 +807,7 @@ export default function ChatPage() {
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-3 max-w-3xl ${
+                className={`flex gap-2 sm:gap-3 max-w-[95%] sm:max-w-3xl ${
                   msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                 }`}
               >
@@ -827,7 +827,7 @@ export default function ChatPage() {
                 </div>
 
                 {/* Message Body */}
-                <div className="flex flex-col space-y-1.5 flex-1 min-w-0 sm:flex-none sm:max-w-[85%]">
+                <div className="flex flex-col space-y-1.5 flex-1 min-w-0 overflow-hidden">
                   {/* MESSAGE BODY (Auto-collapsing if long) */}
                   <ExpandableMessage
                     content={msg.content}
@@ -902,7 +902,7 @@ export default function ChatPage() {
         </div>
 
         {/* ── PROMPT COMPOSER ── */}
-        <div className="p-4 border-t border-[#161a26] bg-[#08090d] shrink-0">
+        <div className="p-2 sm:p-4 border-t border-[#161a26] bg-[#08090d] shrink-0">
           <form
             onSubmit={handleSendMessage}
             className="max-w-4xl mx-auto flex flex-col gap-2"
@@ -938,7 +938,7 @@ export default function ChatPage() {
               </div>
             )}
 
-            <div className="relative flex items-end bg-[#0a0d15] border border-[#1b2336] rounded-lg p-2 focus-within:border-white/30 transition-colors">
+            <div className="relative flex items-end bg-[#0a0d15] border border-[#1b2336] rounded-lg p-1.5 sm:p-2 focus-within:border-white/30 transition-colors gap-1">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -965,15 +965,15 @@ export default function ChatPage() {
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Message Opada... (attach files or type command)"
-                className="flex-1 min-w-0 max-h-36 bg-transparent text-xs text-[#e2e8f0] placeholder-[#54647c] focus:outline-none resize-none px-2 py-1 font-mono"
+                placeholder="Message Opada..."
+                className="flex-1 min-w-0 max-h-36 bg-transparent text-[13px] sm:text-xs text-[#e2e8f0] placeholder-[#54647c] focus:outline-none resize-none px-1 sm:px-2 py-1 font-mono"
               />
 
-              <div className="flex items-center gap-1.5 mr-2 bg-[#0c101a] border border-[#1b2336] rounded-md px-1.5 py-1 text-[10px] font-mono">
+              <div className="hidden sm:flex items-center gap-1.5 mr-1 bg-[#0c101a] border border-[#1b2336] rounded-md px-1.5 py-1 text-[10px] font-mono">
                 <select
                   value={reasoningLevel}
                   onChange={(e) => setReasoningLevel(e.target.value)}
-                  className="bg-transparent text-[#7888a2] font-medium focus:outline-none cursor-pointer"
+                  className="bg-transparent text-[#7888a2] font-medium focus:outline-none cursor-pointer text-[10px]"
                 >
                   <option value="quick" className="bg-[#0c101a] text-white">Quick</option>
                   <option value="standard" className="bg-[#0c101a] text-white">Standard</option>

@@ -13,9 +13,20 @@ body {
   background-color: var(--bg);
   color: var(--fg);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow-x: hidden;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent iOS Safari from resizing visual viewport on keyboard open */
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 ::selection {
