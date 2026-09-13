@@ -140,12 +140,14 @@ const streamAgentTrace = async (conversationId: string, prompt: string) => {
       
       {/* ── TOP ANNOUNCEMENT BAR ── */}
       <div className="border-b border-[#161a26] bg-[#0b0d14] px-4 py-2 text-center text-xs text-[#8e9bb0]">
-        <span className="inline-flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-mono text-[#a5b4cb] font-medium">Opada Operator v1.0.4</span>
-          <span className="text-[#3b4256]">•</span>
-          <span>Go ReAct Runtime with Rust Sandbox Isolation &amp; pgvector Memory</span>
-          <Link href="/chat" className="ml-1 text-white hover:underline inline-flex items-center gap-1 font-medium">
+        <span className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-mono text-[#a5b4cb] font-medium">Opada Operator v1.0.4</span>
+            <span className="text-[#3b4256] hidden sm:inline">•</span>
+          </div>
+          <span className="hidden sm:inline truncate max-w-sm md:max-w-none">Go ReAct Runtime with Rust Sandbox &amp; pgvector</span>
+          <Link href="/chat" className="text-white hover:underline flex items-center gap-1 font-medium mt-1 sm:mt-0">
             Launch Console <ArrowRight className="w-3 h-3" />
           </Link>
         </span>
@@ -153,15 +155,15 @@ const streamAgentTrace = async (conversationId: string, prompt: string) => {
 
       {/* ── NAVIGATION ── */}
       <header className="sticky top-0 z-50 border-b border-[#161a26] bg-[#08090d]/90 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-7 h-7 rounded bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-white group-hover:border-white/25 transition-colors">
                 <Terminal className="w-4 h-4" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm tracking-tight text-white">Opada</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#252c3f] bg-[#121622] text-[#8e9bb0]">
+                <span className="font-semibold text-sm tracking-tight text-white hidden min-[400px]:inline">Opada</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#252c3f] bg-[#121622] text-[#8e9bb0] hidden sm:inline-block">
                   daemon
                 </span>
               </div>
@@ -177,7 +179,7 @@ const streamAgentTrace = async (conversationId: string, prompt: string) => {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded border border-[#1b2130] bg-[#0e111a] text-[11px] font-mono text-[#7888a2]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               <span>All Systems 100%</span>
@@ -185,17 +187,17 @@ const streamAgentTrace = async (conversationId: string, prompt: string) => {
 
             <Link
               href="/login"
-              className="text-xs text-[#8e9bb0] hover:text-white px-3 py-1.5 transition-colors"
+              className="text-xs text-[#8e9bb0] hover:text-white px-2 sm:px-3 py-1.5 transition-colors"
             >
               Sign In
             </Link>
 
             <Link
               href="/chat"
-              className="h-8 px-3.5 rounded bg-white text-[#08090d] text-xs font-semibold flex items-center gap-1.5 hover:bg-[#e2e8f0] transition-colors shadow-sm"
+              className="h-8 px-2.5 sm:px-3.5 rounded bg-white text-[#08090d] text-xs font-semibold flex items-center gap-1.5 hover:bg-[#e2e8f0] transition-colors shadow-sm"
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              Open Console
+              <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+              <span className="hidden min-[400px]:inline">Console</span>
             </Link>
           </div>
         </div>
@@ -759,7 +761,8 @@ print(f"Jail PID: {os.getpid()} | Open Sockets: {len(active_conns)}")
           </div>
 
           <div className="rounded-xl border border-[#1b2233] bg-[#0c0f18] overflow-hidden text-xs">
-            <table className="w-full text-left font-mono">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left font-mono min-w-[700px]">
               <thead>
                 <tr className="border-b border-[#181f30] bg-[#0e121d] text-[#697992] text-[11px]">
                   <th className="py-3 px-4 font-semibold">METRIC</th>
@@ -801,6 +804,7 @@ print(f"Jail PID: {os.getpid()} | Open Sockets: {len(active_conns)}")
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </section>

@@ -595,24 +595,24 @@ export default function ChatPage() {
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#08090d] relative">
         {/* Top Header */}
         <header className="h-14 border-b border-[#161a26] bg-[#08090d]/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-1.5 rounded-md hover:bg-[#121622] text-[#7888a2] hover:text-white transition-colors"
+                className="p-1.5 rounded-md hover:bg-[#121622] text-[#7888a2] hover:text-white transition-colors shrink-0"
                 title="Open sidebar"
               >
                 <Menu className="w-4 h-4" />
               </button>
             )}
 
-            <div className="flex items-center gap-2 overflow-hidden">
-              <span className="text-xs font-mono font-semibold text-white truncate max-w-[70px] min-[400px]:max-w-[120px] sm:max-w-xs">
+            <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0 pr-2">
+              <span className="text-xs font-mono font-semibold text-white truncate w-full sm:max-w-xs">
                 {conversations.find((c) => c.id === activeConvId)?.title ||
                   "Active Workspace"}
               </span>
-              <span className="text-[#3b455b] hidden sm:inline">•</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#1b2336] bg-[#0c101a] text-[#8e9bb0] hidden sm:inline-block">
+              <span className="text-[#3b455b] hidden sm:inline shrink-0">•</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-[#1b2336] bg-[#0c101a] text-[#8e9bb0] hidden sm:inline-block shrink-0">
                 PostgreSQL SKIP LOCKED
               </span>
             </div>
