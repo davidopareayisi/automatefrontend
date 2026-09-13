@@ -26,6 +26,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Edit2,
+  Paperclip,
+  FileIcon,
 } from "lucide-react";
 import { api, Conversation, Message, StepEvent, User } from "@/lib/api";
 
@@ -195,14 +197,20 @@ export default function ChatPage() {
   const [inputPrompt, setInputPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState("groq");
+  const [reasoningLevel, setReasoningLevel] = useState("standard");
   const [backendOnline, setBackendOnline] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // File Upload State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
 
   // Copied message state
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load User & Check Auth
   useEffect(() => {
@@ -409,19 +417,31 @@ export default function ChatPage() {
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const prompt = inputPrompt.trim();
-    if (!prompt || isLoading || !activeConvId) return;
+    if ((!prompt && !selectedFile) || isLoading || !activeConvId) return;
 
     setInputPrompt("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
 
+    const currentFile = selectedFile;
+    const currentPreview = filePreview;
+    
+    // Clear preview immediately
+    setSelectedFile(null);
+    setFilePreview(null);
+
     const userMsgId = `usr-${Date.now()}`;
+    let contentStr = prompt;
+    if (currentPreview) {
+      contentStr = `![Uploaded Image](${currentPreview})\n\n${prompt}`;
+    }
+
     const userMessage: Message = {
       id: userMsgId,
       conversation_id: activeConvId,
       role: "user",
-      content: prompt,
+      content: contentStr,
       created_at: new Date().toISOString(),
     };
 
@@ -435,7 +455,13 @@ export default function ChatPage() {
       }
 
       // Directly query the live Render Core backend
-      const res = await api.sendMessage(activeConvId, prompt, selectedProvider);
+      const res = await api.sendMessage(
+        activeConvId,
+        prompt, // API only needs the raw prompt, backend prepends the real base64 file data
+        selectedProvider,
+        reasoningLevel,
+        currentFile || undefined
+      );
 
       if (res?.assistant_message) {
         setMessages((prev) => [...prev, res.assistant_message]);
@@ -468,6 +494,38 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, dummyResponse]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check size limit (e.g., 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File is too large. Please select a file under 5MB.");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview if it's an image
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -849,7 +907,54 @@ export default function ChatPage() {
             onSubmit={handleSendMessage}
             className="max-w-4xl mx-auto flex flex-col gap-2"
           >
+            {/* File Preview Area */}
+            {filePreview && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="relative w-16 h-16 rounded overflow-hidden border border-[#1b2336] bg-[#0c101a]">
+                  <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="absolute top-0.5 right-0.5 bg-black/50 hover:bg-black/80 text-white rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+            {selectedFile && !filePreview && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="relative px-3 py-1.5 rounded border border-[#1b2336] bg-[#0c101a] text-[#c0ccdf] text-[11px] font-mono flex items-center gap-2">
+                  <FileIcon className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[200px]">{selectedFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="relative flex items-end bg-[#0a0d15] border border-[#1b2336] rounded-lg p-2 focus-within:border-white/30 transition-colors">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.txt,.csv"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-[#54647c] hover:text-[#c0ccdf] rounded shrink-0 cursor-pointer"
+                title="Attach file (Image, PDF, etc)"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -860,13 +965,25 @@ export default function ChatPage() {
                   e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Message Opada... (e.g. calculate variance in Python jail, check telemetry, run query)"
+                placeholder="Message Opada... (attach files or type command)"
                 className="flex-1 min-w-0 max-h-36 bg-transparent text-xs text-[#e2e8f0] placeholder-[#54647c] focus:outline-none resize-none px-2 py-1 font-mono"
               />
 
+              <div className="flex items-center gap-1.5 mr-2 bg-[#0c101a] border border-[#1b2336] rounded-md px-1.5 py-1 text-[10px] font-mono">
+                <select
+                  value={reasoningLevel}
+                  onChange={(e) => setReasoningLevel(e.target.value)}
+                  className="bg-transparent text-[#7888a2] font-medium focus:outline-none cursor-pointer"
+                >
+                  <option value="quick" className="bg-[#0c101a] text-white">Quick</option>
+                  <option value="standard" className="bg-[#0c101a] text-white">Standard</option>
+                  <option value="deep" className="bg-[#0c101a] text-white">Deep Research</option>
+                </select>
+              </div>
+
               <button
                 type="submit"
-                disabled={!inputPrompt.trim() || isLoading}
+                disabled={(!inputPrompt.trim() && !selectedFile) || isLoading}
                 className="p-2 rounded bg-white text-[#08090d] hover:bg-[#e2e8f0] font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0 cursor-pointer"
                 title="Send"
               >

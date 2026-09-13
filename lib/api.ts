@@ -105,9 +105,11 @@ class ApiClient {
     options: RequestInit = {},
   ): Promise<T> {
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     };
+    if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
 
     const token = this.getToken();
     if (token) {
@@ -242,6 +244,8 @@ class ApiClient {
     conversationId: string,
     content: string,
     provider?: string,
+    reasoningLevel?: string,
+    file?: File,
   ): Promise<{
     conversation_id: string;
     title: string;
@@ -249,9 +253,22 @@ class ApiClient {
     user_message: Message;
     assistant_message: Message;
   }> {
+    if (file) {
+      const formData = new FormData();
+      formData.append("content", content);
+      if (provider) formData.append("provider", provider);
+      if (reasoningLevel) formData.append("reasoning_level", reasoningLevel);
+      formData.append("file", file);
+      
+      return this.request(`/conversations/${conversationId}/messages`, {
+        method: "POST",
+        body: formData,
+      });
+    }
+
     return this.request(`/conversations/${conversationId}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content, provider }),
+      body: JSON.stringify({ content, provider, reasoning_level: reasoningLevel }),
     });
   }
 }
