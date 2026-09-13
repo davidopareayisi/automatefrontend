@@ -425,7 +425,12 @@ export default function ChatPage() {
         setConversations((prev) =>
           prev.map((c) =>
             c.id === activeConvId
-              ? { ...c, title: res.title, updated_at: new Date().toISOString() }
+              ? { 
+                  ...c, 
+                  title: res.title, 
+                  model_provider: res.model_provider || selectedProvider,
+                  updated_at: new Date().toISOString() 
+                }
               : c,
           ),
         );
