@@ -544,7 +544,7 @@ export default function ChatPage() {
   ];
 
   return (
-    <div className="flex h-screen w-screen bg-[#08090d] text-[#e2e8f0] overflow-hidden font-sans selection:bg-white/20 selection:text-white">
+    <div className="flex h-[100dvh] w-screen bg-[#08090d] text-[#e2e8f0] overflow-hidden font-sans selection:bg-white/20 selection:text-white">
       {/* ── LEFT SIDEBAR ── */}
       {/* Mobile Backdrop overlay */}
       {sidebarOpen && (
